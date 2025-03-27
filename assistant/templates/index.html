@@ -1,0 +1,364 @@
+<!-- <!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Conversational AI</title>
+</head>
+<body>
+    <div id="partial-transcription">Partial transcription...</div>
+    <div id="status">Connecting...</div>
+
+    <script>
+        ChatroomId = "{{chat_group.room_id}}"
+        const socket = new WebSocket('ws://' + window.location.host + '/ws/conversation/' + ChatroomId + '/');
+        const partialDiv = document.getElementById('partial-transcription');
+        const statusDiv = document.getElementById('status');
+
+        socket.onopen = function() {
+            statusDiv.textContent = 'Connected';
+        };
+
+        socket.onmessage = function(event) {
+            if (typeof event.data === 'string') {
+                const data = JSON.parse(event.data);
+                if (data.type === 'partial') {
+                    partialDiv.textContent = data.text;  // Display partial transcription
+                }
+            } else if (event.data instanceof Blob) {
+                const audioUrl = URL.createObjectURL(event.data);
+                const audio = new Audio(audioUrl);
+                audio.play();  // Play received audio
+            }
+        };
+
+        socket.onerror = function(error) {
+            statusDiv.textContent = 'WebSocket Error';
+        };
+
+        socket.onclose = function() {
+            statusDiv.textContent = 'Disconnected';
+        };
+
+        // Capture and send audio
+        navigator.mediaDevices.getUserMedia({ audio: true })
+            .then(stream => {
+                const audioContext = new AudioContext({ sampleRate: 16000 });
+                const source = audioContext.createMediaStreamSource(stream);
+                const processor = audioContext.createScriptProcessor(4096, 1, 1);
+
+                source.connect(processor);
+                processor.connect(audioContext.destination);
+
+                processor.onaudioprocess = function(e) {
+                    const inputData = e.inputBuffer.getChannelData(0);
+                    const outputData = new Int16Array(inputData.length);
+                    for (let i = 0; i < inputData.length; i++) {
+                        outputData[i] = Math.max(-1, Math.min(1, inputData[i])) * 0x7FFF;
+                    }
+                    if (socket.readyState === WebSocket.OPEN) {
+                        socket.send(outputData.buffer);  // Send audio chunk
+                    }
+                };
+            })
+            .catch(err => {
+                statusDiv.textContent = 'Microphone Error: ' + err.message;
+            });
+    </script>
+</body>
+</html> -->
+
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Voice AI Assistant</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+    <style>
+        :root {
+            --bg-primary: #343541;
+            --bg-secondary: #444654;
+            --text-primary: #FFFFFF;
+            --text-secondary: #8E8EA0;
+        }
+
+        body {
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .chat-container {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .chat-messages {
+            flex-grow: 1;
+            overflow-y: auto;
+            padding: 20px;
+            background-color: var(--bg-primary);
+        }
+
+        .message {
+            margin-bottom: 20px;
+            display: flex;
+            align-items: flex-start;
+        }
+
+        .message-avatar {
+            width: 30px;
+            height: 30px;
+            margin-right: 15px;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .message-avatar.user {
+            background-color: #10A37F;
+        }
+
+        .message-avatar.ai {
+            background-color: #19C37D;
+        }
+
+        .message-content {
+            flex-grow: 1;
+            line-height: 1.5;
+        }
+
+        .input-area {
+            background-color: var(--bg-secondary);
+            padding: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .form-control {
+            background-color: #40414F;
+            border-color: #4E4F60;
+            color: var(--text-primary);
+        }
+
+        .btn-send {
+            background-color: #19C37D;
+            color: white;
+        }
+
+        .btn-send:hover {
+            background-color: #15a767;
+        }
+
+        .btn-mic {
+            background-color: transparent;
+            border: none;
+            color: var(--text-secondary);
+        }
+
+        .btn-mic.active {
+            color: #10A37F;
+        }
+
+        .status-indicator {
+            text-align: center;
+            color: var(--text-secondary);
+            margin-bottom: 10px;
+        }
+
+        /* Scrollbar Styling */
+        .chat-messages::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .chat-messages::-webkit-scrollbar-track {
+            background: #2C2C2C;
+        }
+
+        .chat-messages::-webkit-scrollbar-thumb {
+            background: #4A4A4A;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="chat-container">
+        <div class="status-indicator" id="status">Connecting...</div>
+        
+        <div class="chat-messages" id="chat-messages">
+            <div id="partial-transcription" class="message">
+                <div class="message-avatar ai">
+                    <i data-lucide="bot" class="lucide-icon"></i>
+                </div>
+                <div class="message-content"></div>
+            </div>
+        </div>
+
+        <div class="input-area">
+            <button id="mic-button" class="btn btn-mic">
+                <i data-lucide="mic"></i>
+            </button>
+            <input type="text" class="form-control" id="message-input" placeholder="Type a message...">
+            <button id="send-button" class="btn btn-send">
+                <i data-lucide="send"></i>
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // Lucide Icons Initialization
+        lucide.createIcons();
+
+        // WebSocket and Audio Configuration
+        const ChatroomId = "{{chat_group.room_id}}";
+        const socket = new WebSocket('ws://' + window.location.host + '/ws/conversation/' + ChatroomId + '/');
+        
+        // DOM Elements
+        const statusEl = document.getElementById('status');
+        const chatMessagesEl = document.getElementById('chat-messages');
+        const partialTranscriptionEl = document.getElementById('partial-transcription');
+        const messageInputEl = document.getElementById('message-input');
+        const sendButtonEl = document.getElementById('send-button');
+        const micButtonEl = document.getElementById('mic-button');
+
+
+        
+        sendButtonEl.onclick = () => {
+            socket.send(JSON.stringify({
+                'message': messageInputEl.value,
+                'message_type': 'text_message',
+                'sender': 'samuel'
+            }));
+            messageInputEl.value = '';
+            addMessage(data.message, true);
+        };
+
+
+        // Helper Functions
+        function addMessage(message, isUser = false) {
+            const messageEl = document.createElement('div');
+            messageEl.classList.add('message');
+            
+            const avatarEl = document.createElement('div');
+            avatarEl.classList.add('message-avatar', isUser ? 'user' : 'ai');
+            avatarEl.innerHTML = `<i data-lucide="${isUser ? 'user' : 'bot'}"></i>`;
+            
+            const contentEl = document.createElement('div');
+            contentEl.classList.add('message-content');
+            contentEl.textContent = message;
+
+            messageEl.appendChild(avatarEl);
+            messageEl.appendChild(contentEl);
+            
+            chatMessagesEl.appendChild(messageEl);
+            chatMessagesEl.scrollTop = chatMessagesEl.scrollHeight;
+            
+            lucide.createIcons();
+        }
+
+        // WebSocket Event Handlers
+        socket.onopen = () => statusEl.textContent = 'Connected';
+        socket.onclose = () => statusEl.textContent = 'Disconnected';
+        socket.onerror = () => statusEl.textContent = 'WebSocket Error';
+
+        socket.onmessage = (event) => {
+            if (typeof event.data === 'string') {
+                const data = JSON.parse(event.data);
+                if (data.type === 'partial') {
+                    document.querySelector('#partial-transcription .message-content').textContent = data.text;
+                } else if (data.message_type === 'text_message') {
+                    if (data.sender === 'samuel') {
+                        addMessage(data.message, true);
+                    } else {
+                        addMessage(data.message);
+                    }
+                }
+            } else if (event.data instanceof Blob) {
+                const audioUrl = URL.createObjectURL(event.data);
+                const audio = new Audio(audioUrl);
+                audio.play();
+
+            }
+        };
+
+        // Audio Capture
+        let audioContext, source, processor;
+        let isRecording = false;
+
+        function startAudioCapture() {
+            navigator.mediaDevices.getUserMedia({ audio: true })
+                .then(stream => {
+                    audioContext = new AudioContext({ sampleRate: 16000 });
+                    source = audioContext.createMediaStreamSource(stream);
+                    processor = audioContext.createScriptProcessor(4096, 1, 1);
+
+                    source.connect(processor);
+                    processor.connect(audioContext.destination);
+
+                    processor.onaudioprocess = function(e) {
+                        const inputData = e.inputBuffer.getChannelData(0);
+                        const outputData = new Int16Array(inputData.length);
+                        for (let i = 0; i < inputData.length; i++) {
+                            outputData[i] = Math.max(-1, Math.min(1, inputData[i])) * 0x7FFF;
+                        }
+                        if (socket.readyState === WebSocket.OPEN) {
+                            socket.send(outputData.buffer);
+                        }
+                    };
+                })
+                .catch(err => {
+                    statusEl.textContent = 'Microphone Error: ' + err.message;
+                });
+        }
+
+        function stopAudioCapture() {
+            if (processor) {
+                processor.disconnect();
+                source.disconnect();
+                processor = null;
+                source = null;
+            }
+        }
+
+        // Event Listeners
+        micButtonEl.addEventListener('click', () => {
+            isRecording = !isRecording;
+            micButtonEl.classList.toggle('active');
+            
+            if (isRecording) {
+                startAudioCapture();
+            } else {
+                stopAudioCapture();
+            }
+        });
+
+        sendButtonEl.addEventListener('click', () => {
+            const message = messageInputEl.value.trim();
+            if (message) {
+                addMessage(message, true);
+                // TODO: Implement message sending via WebSocket
+                messageInputEl.value = '';
+            }
+        });
+
+        messageInputEl.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                sendButtonEl.click();
+            }
+        });
+    </script>
+</body>
+</html>

@@ -132,7 +132,10 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.0/howto/static-files/
 
-STATIC_URL = 'static/'
+STATIC_URL = "/static/"
+STATICFILES_DIRS = [
+    os.path.join(BASE_DIR, "static"),
+]
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
@@ -174,6 +177,9 @@ STRIPE_SECRET_KEY = STRIPE_TEST_SECRET_KEY
 
 DJSTRIPE_WEBHOOK_SECRET = os.environ['STRIPE']
 DJSTRIPE_USE_NATIVE_JSONFIELD = True
+
+# dj-stripe settings
+DJSTRIPE_WEBHOOK_URL = "https://your-domain.com/stripe/webhook/"
 
 # Optional: Specify which Stripe model field to use for foreign keys
 DJSTRIPE_FOREIGN_KEY_TO_FIELD = "id"
@@ -219,3 +225,23 @@ CELERY_BEAT_SCHEDULE = {
         'schedule': crontab(minute='*'), # Runs every minute
     }
 }
+
+
+
+SOCIAL_AUTH_FACEBOOK_KEY = os.environ['SOCIAL_AUTH_FACEBOOK_KEY']
+SOCIAL_AUTH_FACEBOOK_SECRET = os.environ['SOCIAL_AUTH_FACEBOOK_SECRET']
+
+SOCIAL_AUTH_TWITTER_KEY = os.environ['SOCIAL_AUTH_TWITTER_KEY']
+SOCIAL_AUTH_TWITTER_SECRET = os.environ['SOCIAL_AUTH_TWITTER_SECRET']
+
+SOCIAL_AUTH_LINKEDIN_OAUTH2_KEY = os.environ['SOCIAL_AUTH_LINKEDIN_KEY']
+SOCIAL_AUTH_LINKEDIN_OAUTH2_SECRET = os.environ['SOCIAL_AUTH_LINKEDIN_SECRET']
+
+SOCIAL_AUTH_INSTAGRAM_KEY = os.environ['SOCIAL_AUTH_INSTAGRAM_KEY']
+SOCIAL_AUTH_INSTAGRAM_SECRET = os.environ['SOCIAL_AUTH_INSTAGRAM_SECRET']
+
+
+HUBSPOT_CLIENT_ID = os.environ['HUBSPOT_CLIENT_ID']
+HUBSPOT_CLIENT_SECRET = os.environ['HUBSPOT_CLIENT_SECRET']
+HUBSPOT_REDIRECT_URI = 'your-redirect-uri'
+HUBSPOT_BASE_URL = 'https://api.hubapi.com'

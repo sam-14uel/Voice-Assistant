@@ -3,11 +3,11 @@ from huggingface_hub import InferenceClient
 from .models import ChatRoom, Chat, Task, TaskWorkflow
 from django.contrib.auth.models import User
 from django.utils import timezone
+import os
 
 client = InferenceClient(
 	provider="hf-inference",
-	# api_key="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"
-    api_key = "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"
+    api_key = os.environ['HF_API_KEY']
 )
 
 from django.db.models import Q

@@ -366,197 +366,276 @@ from django.conf import settings
 #============================== HUBSPOT REST API ======================================
 # CRM
 def get_hubspot_token(code):
-    url = f"{settings.HUBSPOT_BASE_URL}/oauth/v1/token"
-    headers = {"Content-Type": "application/x-www-form-urlencoded"}
-    data = {
-        "grant_type": "authorization_code",
-        "client_id": settings.HUBSPOT_CLIENT_ID,
-        "client_secret": settings.HUBSPOT_CLIENT_SECRET,
-        "redirect_uri": settings.HUBSPOT_REDIRECT_URI,
-        "code": code
-    }
-    response = requests.post(url, headers=headers, data=data)
-    return response.json().get('access_token')
+    try:
+        url = f"{settings.HUBSPOT_BASE_URL}/oauth/v1/token"
+        headers = {"Content-Type": "application/x-www-form-urlencoded"}
+        data = {
+            "grant_type": "authorization_code",
+            "client_id": settings.HUBSPOT_CLIENT_ID,
+            "client_secret": settings.HUBSPOT_CLIENT_SECRET,
+            "redirect_uri": settings.HUBSPOT_REDIRECT_URI,
+            "code": code
+        }
+        response = requests.post(url, headers=headers, data=data)
+        return response.json().get('access_token')
+    except Exception as e:
+        return f"Error getting token: {str(e)}"
 
 #====== CONTACTS ======
 def create_contact(access_token, email, first_name, last_name):
-    url = f"{settings.HUBSPOT_BASE_URL}/crm/v3/objects/contacts"
-    headers = {"Authorization": f"Bearer {access_token}", "Content-Type": "application/json"}
-    data = {
-        "properties": {
-            "email": email,
-            "firstname": first_name,
-            "lastname": last_name
+    try:
+        url = f"{settings.HUBSPOT_BASE_URL}/crm/v3/objects/contacts"
+        headers = {"Authorization": f"Bearer {access_token}", "Content-Type": "application/json"}
+        data = {
+            "properties": {
+                "email": email,
+                "firstname": first_name,
+                "lastname": last_name
+            }
         }
-    }
-    response = requests.post(url, json=data, headers=headers)
-    return response.json()
+        response = requests.post(url, json=data, headers=headers)
+        return response.json()
+    except Exception as e:
+        return f"Error creating contact: {str(e)}"
 
 
 def update_contact(access_token, contact_id, **kwargs):
-    url = f"{settings.HUBSPOT_BASE_URL}/crm/v3/objects/contacts/{contact_id}"
-    headers = {"Authorization": f"Bearer {access_token}", "Content-Type": "application/json"}
-    data = {"properties": kwargs}
-    response = requests.patch(url, json=data, headers=headers)
-    return response.json()
+    try:
+        url = f"{settings.HUBSPOT_BASE_URL}/crm/v3/objects/contacts/{contact_id}"
+        headers = {"Authorization": f"Bearer {access_token}", "Content-Type": "application/json"}
+        data = {"properties": kwargs}
+        response = requests.patch(url, json=data, headers=headers)
+        return response.json()
+    except Exception as e:
+        return f"Error updating contact: {str(e)}"
 
 
 def delete_contact(access_token, contact_id):
-    url = f"{settings.HUBSPOT_BASE_URL}/crm/v3/objects/contacts/{contact_id}"
-    headers = {"Authorization": f"Bearer {access_token}"}
-    response = requests.delete(url, headers=headers)
-    return response.status_code == 204
+    try:
+        url = f"{settings.HUBSPOT_BASE_URL}/crm/v3/objects/contacts/{contact_id}"
+        headers = {"Authorization": f"Bearer {access_token}"}
+        response = requests.delete(url, headers=headers)
+        return response.status_code == 204
+    except Exception as e:
+        return f"Error deleting contact: {str(e)}"
 
 
 def get_contact(access_token, contact_id):
-    url = f"{settings.HUBSPOT_BASE_URL}/crm/v3/objects/contacts/{contact_id}"
-    headers = {"Authorization": f"Bearer {access_token}"}
-    response = requests.get(url, headers=headers)
-    return response.json()
+    try:
+        url = f"{settings.HUBSPOT_BASE_URL}/crm/v3/objects/contacts/{contact_id}"
+        headers = {"Authorization": f"Bearer {access_token}"}
+        response = requests.get(url, headers=headers)
+        return response.json()
+    except Exception as e:
+        return f"Error getting contact: {str(e)}"
+
+
+def get_all_contacts(access_token):
+    pass
 
 #====== COMPANIES ======
 def create_company(access_token, name, domain, industry):
-    url = f"{settings.HUBSPOT_BASE_URL}/crm/v3/objects/companies"
-    headers = {"Authorization": f"Bearer {access_token}", "Content-Type": "application/json"}
-    data = {
-        "properties": {
-            "name": name,
-            "domain": domain,
-            "industry": industry
+    try:
+        url = f"{settings.HUBSPOT_BASE_URL}/crm/v3/objects/companies"
+        headers = {"Authorization": f"Bearer {access_token}", "Content-Type": "application/json"}
+        data = {
+            "properties": {
+                "name": name,
+                "domain": domain,
+                "industry": industry
+            }
         }
-    }
-    response = requests.post(url, json=data, headers=headers)
-    return response.json()
+        response = requests.post(url, json=data, headers=headers)
+        return response.json()
+    except Exception as e:
+        return f"Error creating company: {str(e)}"
 
 
 def update_company(access_token, company_id, **kwargs):
-    url = f"{settings.HUBSPOT_BASE_URL}/crm/v3/objects/companies/{company_id}"
-    headers = {"Authorization": f"Bearer {access_token}", "Content-Type": "application/json"}
-    data = {"properties": kwargs}
-    response = requests.patch(url, json=data, headers=headers)
-    return response.json()
+    try:
+        url = f"{settings.HUBSPOT_BASE_URL}/crm/v3/objects/companies/{company_id}"
+        headers = {"Authorization": f"Bearer {access_token}", "Content-Type": "application/json"}
+        data = {"properties": kwargs}
+        response = requests.patch(url, json=data, headers=headers)
+        return response.json()
+    except Exception as e:
+        return f"Error updating company: {str(e)}"
 
 
 def delete_company(access_token, company_id):
-    url = f"{settings.HUBSPOT_BASE_URL}/crm/v3/objects/companies/{company_id}"
-    headers = {"Authorization": f"Bearer {access_token}"}
-    response = requests.delete(url, headers=headers)
-    return response.status_code == 204
+    try:
+        url = f"{settings.HUBSPOT_BASE_URL}/crm/v3/objects/companies/{company_id}"
+        headers = {"Authorization": f"Bearer {access_token}"}
+        response = requests.delete(url, headers=headers)
+        return response.status_code == 204
+    except Exception as e:
+        return f"Error deleting company: {str(e)}"
 
 
 def get_company(access_token, company_id):
-    url = f"{settings.HUBSPOT_BASE_URL}/crm/v3/objects/companies/{company_id}"
-    headers = {"Authorization": f"Bearer {access_token}"}
-    response = requests.get(url, headers=headers)
-    return response.json()
+    try:
+        url = f"{settings.HUBSPOT_BASE_URL}/crm/v3/objects/companies/{company_id}"
+        headers = {"Authorization": f"Bearer {access_token}"}
+        response = requests.get(url, headers=headers)
+        return response.json()
+    except Exception as e:
+        return f"Error getting company: {str(e)}"
 
 #====== DEALS ========
 def create_deal(access_token, dealname, amount, pipeline, stage):
-    url = f"{settings.HUBSPOT_BASE_URL}/crm/v3/objects/deals"
-    headers = {"Authorization": f"Bearer {access_token}", "Content-Type": "application/json"}
-    data = {
-        "properties": {
-            "dealname": dealname,
-            "amount": amount,
-            "pipeline": pipeline,
-            "dealstage": stage
+    try:
+        url = f"{settings.HUBSPOT_BASE_URL}/crm/v3/objects/deals"
+        headers = {"Authorization": f"Bearer {access_token}", "Content-Type": "application/json"}
+        data = {
+            "properties": {
+                "dealname": dealname,
+                "amount": amount,
+                "pipeline": pipeline,
+                "dealstage": stage
+            }
         }
-    }
-    response = requests.post(url, json=data, headers=headers)
-    return response.json()
+        response = requests.post(url, json=data, headers=headers)
+        return response.json()
+    except Exception as e:
+        return f"Error creating deal: {str(e)}"
 
 
 def update_deal(access_token, deal_id, **kwargs):
-    url = f"{settings.HUBSPOT_BASE_URL}/crm/v3/objects/deals/{deal_id}"
-    headers = {"Authorization": f"Bearer {access_token}", "Content-Type": "application/json"}
-    data = {"properties": kwargs}
-    response = requests.patch(url, json=data, headers=headers)
-    return response.json()
+    try:
+        url = f"{settings.HUBSPOT_BASE_URL}/crm/v3/objects/deals/{deal_id}"
+        headers = {"Authorization": f"Bearer {access_token}", "Content-Type": "application/json"}
+        data = {"properties": kwargs}
+        response = requests.patch(url, json=data, headers=headers)
+        return response.json()
+    except Exception as e:
+        return f"Error updating deal: {str(e)}"
 
 
 def delete_deal(access_token, deal_id):
-    url = f"{settings.HUBSPOT_BASE_URL}/crm/v3/objects/deals/{deal_id}"
-    headers = {"Authorization": f"Bearer {access_token}"}
-    response = requests.delete(url, headers=headers)
-    return response.status_code == 204
+    try:
+        url = f"{settings.HUBSPOT_BASE_URL}/crm/v3/objects/deals/{deal_id}"
+        headers = {"Authorization": f"Bearer {access_token}"}
+        response = requests.delete(url, headers=headers)
+        return response.status_code == 204
+    except Exception as e:
+        return f"Error deleting deal: {str(e)}"
 
 
 def get_deal(access_token, deal_id):
-    url = f"{settings.HUBSPOT_BASE_URL}/crm/v3/objects/deals/{deal_id}"
-    headers = {"Authorization": f"Bearer {access_token}"}
-    response = requests.get(url, headers=headers)
-    return response.json()
+    try:
+        url = f"{settings.HUBSPOT_BASE_URL}/crm/v3/objects/deals/{deal_id}"
+        headers = {"Authorization": f"Bearer {access_token}"}
+        response = requests.get(url, headers=headers)
+        return response.json()
+    except Exception as e:
+        return f"Error getting deal: {str(e)}"
 
+
+def get_all_deals(access_token):
+    pass
 
 #====== PRODUCTS ======
 def create_product(access_token, name, price):
-    url = f"{settings.HUBSPOT_BASE_URL}/crm/v3/objects/products"
-    headers = {"Authorization": f"Bearer {access_token}", "Content-Type": "application/json"}
-    data = {
-        "properties": {
-            "name": name,
-            "price": price
+    try:
+        url = f"{settings.HUBSPOT_BASE_URL}/crm/v3/objects/products"
+        headers = {"Authorization": f"Bearer {access_token}", "Content-Type": "application/json"}
+        data = {
+            "properties": {
+                "name": name,
+                "price": price
+            }
         }
-    }
-    response = requests.post(url, json=data, headers=headers)
-    return response.json()
+        response = requests.post(url, json=data, headers=headers)
+        return response.json()
+    except Exception as e:
+        return f"Error creating product: {str(e)}"
 
 
 def update_product(access_token, product_id, **kwargs):
-    url = f"{settings.HUBSPOT_BASE_URL}/crm/v3/objects/products/{product_id}"
-    headers = {"Authorization": f"Bearer {access_token}", "Content-Type": "application/json"}
-    data = {"properties": kwargs}
-    response = requests.patch(url, json=data, headers=headers)
-    return response.json()
+    try:
+        url = f"{settings.HUBSPOT_BASE_URL}/crm/v3/objects/products/{product_id}"
+        headers = {"Authorization": f"Bearer {access_token}", "Content-Type": "application/json"}
+        data = {"properties": kwargs}
+        response = requests.patch(url, json=data, headers=headers)
+        return response.json()
+    except Exception as e:
+        return f"Error updating product: {str(e)}"
 
 
 def delete_product(access_token, product_id):
-    url = f"{settings.HUBSPOT_BASE_URL}/crm/v3/objects/products/{product_id}"
-    headers = {"Authorization": f"Bearer {access_token}"}
-    response = requests.delete(url, headers=headers)
-    return response.status_code == 204
+    try:
+        url = f"{settings.HUBSPOT_BASE_URL}/crm/v3/objects/products/{product_id}"
+        headers = {"Authorization": f"Bearer {access_token}"}
+        response = requests.delete(url, headers=headers)
+        return response.status_code == 204
+    except Exception as e:
+        return f"Error deleting product: {str(e)}"
 
 
 def get_product(access_token, product_id):
-    url = f"{settings.HUBSPOT_BASE_URL}/crm/v3/objects/products/{product_id}"
-    headers = {"Authorization": f"Bearer {access_token}"}
-    response = requests.get(url, headers=headers)
-    return response.json()
+    try:
+        url = f"{settings.HUBSPOT_BASE_URL}/crm/v3/objects/products/{product_id}"
+        headers = {"Authorization": f"Bearer {access_token}"}
+        response = requests.get(url, headers=headers)
+        return response.json()
+    except Exception as e:
+        return f"Error getting product: {str(e)}"
+    
+
+def get_all_products(access_token):
+    pass
+    
 #====== TICKETS ======
 def create_ticket(access_token, subject, content, pipeline, status):
-    url = f"{settings.HUBSPOT_BASE_URL}/crm/v3/objects/tickets"
-    headers = {"Authorization": f"Bearer {access_token}", "Content-Type": "application/json"}
-    data = {
-        "properties": {
-            "subject": subject,
-            "content": content,
-            "pipeline": pipeline,
-            "hs_pipeline": pipeline,
-            "hs_pipelineStage": status
+    try:
+        url = f"{settings.HUBSPOT_BASE_URL}/crm/v3/objects/tickets"
+        headers = {"Authorization": f"Bearer {access_token}", "Content-Type": "application/json"}
+        data = {
+            "properties": {
+                "subject": subject,
+                "content": content,
+                "pipeline": pipeline,
+                "hs_pipeline": pipeline,
+                "hs_pipelineStage": status
+            }
         }
-    }
-    response = requests.post(url, json=data, headers=headers)
-    return response.json()
+        response = requests.post(url, json=data, headers=headers)
+        return response.json()
+    except Exception as e:
+        return f"Error creating ticket: {str(e)}"
 
 
 
 def update_ticket(access_token, ticket_id, **kwargs):
-    url = f"{settings.HUBSPOT_BASE_URL}/crm/v3/objects/tickets/{ticket_id}"
-    headers = {"Authorization": f"Bearer {access_token}", "Content-Type": "application/json"}
-    data = {"properties": kwargs}
-    response = requests.patch(url, json=data, headers=headers)
-    return response.json()
+    try:
+        url = f"{settings.HUBSPOT_BASE_URL}/crm/v3/objects/tickets/{ticket_id}"
+        headers = {"Authorization": f"Bearer {access_token}", "Content-Type": "application/json"}
+        data = {"properties": kwargs}
+        response = requests.patch(url, json=data, headers=headers)
+        return response.json()
+    except Exception as e:
+        return f"Error updating ticket: {str(e)}"
 
 
 def delete_ticket(access_token, ticket_id):
-    url = f"{settings.HUBSPOT_BASE_URL}/crm/v3/objects/tickets/{ticket_id}"
-    headers = {"Authorization": f"Bearer {access_token}"}
-    response = requests.delete(url, headers=headers)
-    return response.status_code == 204
+    try:
+        url = f"{settings.HUBSPOT_BASE_URL}/crm/v3/objects/tickets/{ticket_id}"
+        headers = {"Authorization": f"Bearer {access_token}"}
+        response = requests.delete(url, headers=headers)
+        return response.status_code == 204
+    except Exception as e:
+        return f"Error deleting ticket: {str(e)}"
 
 
 def get_ticket(access_token, ticket_id):
-    url = f"{settings.HUBSPOT_BASE_URL}/crm/v3/objects/tickets/{ticket_id}"
-    headers = {"Authorization": f"Bearer {access_token}"}
-    response = requests.get(url, headers=headers)
-    return response.json()
+    try:
+        url = f"{settings.HUBSPOT_BASE_URL}/crm/v3/objects/tickets/{ticket_id}"
+        headers = {"Authorization": f"Bearer {access_token}"}
+        response = requests.get(url, headers=headers)
+        return response.json()
+    except Exception as e:
+        return f"Error getting ticket: {str(e)}"
+    
+
+def get_all_tickets(access_token):
+    pass

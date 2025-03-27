@@ -480,6 +480,9 @@ def get_company(access_token, company_id):
         return response.json()
     except Exception as e:
         return f"Error getting company: {str(e)}"
+    
+def get_all_companies(access_token):
+    pass
 
 #====== DEALS ========
 def create_deal(access_token, dealname, amount, pipeline, stage):

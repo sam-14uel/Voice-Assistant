@@ -1,6 +1,6 @@
 from django.contrib import admin
 from ai_agent.models import Task, TaskWorkflow, Chat, ChatRoom
-from social_media_app.models import SocialMedia, SocialMediaAccount, PostDraft, ScheduledPost
+from social_media_app.models import IntegrationPlatform, IntegrationAccount, PostDraft, ScheduledPost
 
 # Register your models here.
 
@@ -28,11 +28,11 @@ class ChatRoomAdmin(admin.ModelAdmin):
     search_fields = ('group_name', 'group_decription')
     #ordering = ('-created')
 
-class SocialMediaAdmin(admin.ModelAdmin):
+class IntegrationPlatformAdmin(admin.ModelAdmin):
     list_display = ('name', 'created_at', 'last_updated')
     # search_fields = ('name')
 
-class SocialMediaAccountAdmin(admin.ModelAdmin):
+class IntegrationAccountAdmin(admin.ModelAdmin):
     list_display = ('platform', 'user', 'created_at')
     list_filter = ('created_at', 'platform')
     search_fields = ('platform', 'user')
@@ -51,8 +51,8 @@ class ScheduledPostAdmin(admin.ModelAdmin):
     #ordering = ('-scheduled_time')
 
 
-admin.site.register(SocialMedia, SocialMediaAdmin)
-admin.site.register(SocialMediaAccount, SocialMediaAccountAdmin)
+admin.site.register(IntegrationPlatform, IntegrationPlatformAdmin)
+admin.site.register(IntegrationAccount, IntegrationAccountAdmin)
 admin.site.register(PostDraft, PostDraftAdmin)
 admin.site.register(ScheduledPost, ScheduledPostAdmin)
 admin.site.register(Task, TaskAdmin)

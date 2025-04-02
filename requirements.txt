@@ -1,6 +1,6 @@
 django
-dj-stripe==2.9.0
-stripe==8.0.0
+dj-stripe==2.8.4
+# stripe>=7.0.0,<8.0.0
 openai
 anthropic
 mistralai

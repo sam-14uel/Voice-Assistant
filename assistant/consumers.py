@@ -61,7 +61,7 @@ def speech_to_text(recognizer, audio_bytes):
 
 class ConversationConsumer(AsyncWebsocketConsumer):
     # Load the Vosk model (ensure the path is correct)
-    vosk_model = Model("C:/Users/USER/OneDrive/Desktop/PROJECTS/AI-Agent-Assistant/vosk-model-small-en-us-0.15/vosk-model-small-en-us-0.15")
+    vosk_model = Model("./vosk-model-small-en-us-0.15/vosk-model-small-en-us-0.15")
 
     async def connect(self):
         self.user = self.scope["user"]

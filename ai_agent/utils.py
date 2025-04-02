@@ -16,8 +16,8 @@ hf_client = InferenceClient(
     api_key = "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"
 )
 mistral_client = Mistral(api_key="E2gydwflNPPGY9V1ksxFrEOFeLusQ8bb")
-openai_client = OpenAI()
-anthropic_client = Anthropic()
+openai_client = OpenAI("")
+anthropic_client = Anthropic("")
 
 from django.db.models import Q
 from ai_agent.models import Chat, ChatRoom

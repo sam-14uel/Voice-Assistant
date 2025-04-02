@@ -28,161 +28,7 @@ app = Celery('conversation_app')
 app.config_from_object('django.conf:settings', namespace='CELERY')
 app.autodiscover_tasks()
 
-# # Optimized TTS utilities
-# def text_to_speech(text, voice):
-#     try:
-#         audio = voice.synthesize(text)
-#         return audio
-#     except Exception as e:
-#         logger.error(f"Piper TTS error: {str(e)}")
-#         return None
 
-# # Optimized TTS utilities
-# def text_to_speech(text, voice):
-#     try:
-#         audio = voice.synthesize(text)
-#         return audio
-#     except Exception as e:
-#         logger.error(f"GTTS error: {str(e)}")
-#         return None
-
-# # Optimized STT utilities
-# def speech_to_text(audio_data, recognizer):
-#     try:
-#         if recognizer.AcceptWaveform(audio_data):
-#             result = json.loads(recognizer.Result())
-#             return result.get("text", "")
-#         else:
-#             partial = json.loads(recognizer.PartialResult())
-#             return partial.get("partial", "")
-#     except Exception as e:
-#         logger.error(f"Vosk STT error: {str(e)}")
-#         return ""
-
-
-
-# class ConversationConsumer(AsyncWebsocketConsumer):
-#     vosk_model = Model("C:/Users/USER/OneDrive/Desktop/PROJECTS/AI-Agent-Assistant/vosk-model-small-en-us-0.15/vosk-model-small-en-us-0.15")  # Replace with actual path
-
-#     async def connect(self):
-#         await self.accept()
-#         self.vosk_rec = KaldiRecognizer(self.vosk_model, 16000)
-#         self.audio_queue = queue.Queue()
-#         self.transcription_buffer = ""  # Buffer for accumulating transcriptions
-#         self.last_transcription_time = time.time()  # Track last update
-#         self.silence_threshold = 2  # Seconds of silence to trigger response
-#         logger.info(f"WebSocket connected: {self.channel_name}")
-
-#     async def disconnect(self, close_code):
-#         logger.info(f"WebSocket disconnected: {self.channel_name} (code: {close_code})")
-
-#     async def receive(self, text_data=None, bytes_data=None):
-#         if bytes_data:
-#             if self.vosk_rec.AcceptWaveform(bytes_data):
-#                 result = json.loads(self.vosk_rec.Result())
-#                 transcription = result.get("text", "")
-#                 if transcription:
-#                     self.transcription_buffer += transcription + " "
-#                     self.last_transcription_time = time.time()
-#             else:
-#                 partial = json.loads(self.vosk_rec.PartialResult())
-#                 partial_text = partial.get("partial", "")
-#                 await self.send(text_data=json.dumps({"type": "partial", "text": partial_text}))
-
-#             # Check for silence and process if user stopped speaking
-#             if time.time() - self.last_transcription_time > self.silence_threshold and self.transcription_buffer:
-#                 loop = asyncio.get_event_loop()
-#                 loop.run_in_executor(None, self.process_response, self.transcription_buffer.strip())
-#                 self.transcription_buffer = ""  # Reset buffer
-
-#         try:
-#             while True:
-#                 audio_chunk = self.audio_queue.get_nowait()
-#                 await self.send(bytes_data=audio_chunk)
-#         except queue.Empty:
-#             pass
-
-#     def process_response(self, transcription):
-#         response = generate_ai_response(transcription)
-#         logger.info(f"Transcription: {transcription}")
-#         logger.info(f"AI Response: {response}")
-#         if not response.startswith("AI error"):
-#             # Use gTTS for text-to-speech
-#             tts = gTTS(response, lang='en', tld='co.uk')
-#             audio_fp = io.BytesIO()
-#             tts.write_to_fp(audio_fp)
-#             audio_fp.seek(0)
-#             audio = audio_fp.read()
-#             self.audio_queue.put(audio)
-#         else:
-#             logger.error(response)
-
-
-# WebSocket Consumer integrating all functions
-# class ConversationConsumer(AsyncWebsocketConsumer):
-#     def __init__(self, *args, **kwargs):
-#         super().__init__(*args, **kwargs)
-#         self.vosk_model = Model("path/to/vosk/model")  # Replace with actual path
-#         self.vosk_rec = KaldiRecognizer(self.vosk_model, 16000)
-#         self.piper_voice = PiperVoice.load("path/to/piper/model")  # Replace with actual path
-
-#     async def connect(self):
-#         self.room_id = self.scope['url_route']['kwargs']['room_id']
-#         self.room_group_name = f'chat_{self.room_id}'
-#         self.user = self.scope["user"]
-#         self.username = self.user.username
-#         # # Join room group
-#         # await self.channel_layer.group_add( # type: ignore
-#         #     self.room_group_name,
-#         #     self.channel_name
-#         # )
-#         await self.accept()
-#         self.audio_queue = queue.Queue()
-#         self.transcription_buffer = ""
-#         self.last_transcription_time = time.time()
-#         self.silence_threshold = 2
-#         logger.info(f"WebSocket connected: {self.channel_name}")
-
-#     async def disconnect(self, close_code):
-#         logger.info(f"WebSocket disconnected: {self.channel_name} (code: {close_code})")
-
-#     async def receive(self, text_data=None, bytes_data=None):
-#         if bytes_data:
-#             transcription = speech_to_text(bytes_data, self.vosk_rec)
-#             if transcription:
-#                 self.transcription_buffer += transcription + " "
-#                 self.last_transcription_time = time.time()
-#                 await self.send(text_data=json.dumps({"type": "partial", "text": transcription}))
-
-#             if (time.time() - self.last_transcription_time > self.silence_threshold and 
-#                 self.transcription_buffer):
-#                 prompt = self.transcription_buffer.strip()
-#                 self.transcription_buffer = ""
-
-#                 # Step 1: Reassure the user
-#                 assist_response = conversation_assist(prompt)
-#                 assist_audio = text_to_speech(assist_response, self.piper_voice)
-#                 if assist_audio:
-#                     self.audio_queue.put(assist_audio)
-
-#                 # Step 2: Convert prompt to JSON
-#                 json_response = convert_prompt_to_json(prompt)
-
-#                 # Step 3: Process JSON and execute tasks
-#                 result = process_json_response(self.username, self.room_id, json_response)
-
-#                 # Step 4: Summarize results conversationally
-#                 chat_response = function_response_to_chat(result)
-#                 chat_audio = text_to_speech(chat_response, self.piper_voice)
-#                 if chat_audio:
-#                     self.audio_queue.put(chat_audio)
-
-#         try:
-#             while True:
-#                 audio_chunk = self.audio_queue.get_nowait()
-#                 await self.send(bytes_data=audio_chunk)
-#         except queue.Empty:
-#             pass
 
 
 
@@ -261,8 +107,9 @@ class ConversationConsumer(AsyncWebsocketConsumer):
                 # Save user input
                 await self.save_msg(self.room_id, prompt, self.username)
 
+                from asgiref.sync import sync_to_async
                 # Classify intent
-                intent = classify_intent(prompt)
+                intent = await sync_to_async(classify_intent)("samuelobinnachimdi", self.room_id, prompt)
 
                 if intent == 'task':
 
@@ -306,7 +153,8 @@ class ConversationConsumer(AsyncWebsocketConsumer):
                     loop.run_in_executor(None, self.process_final_response, chat_response)
 
                 elif intent == "chat":
-                    chat_response = generate_chat_response(prompt)
+                    from asgiref.sync import sync_to_async
+                    chat_response = await sync_to_async(generate_chat_response)("samuelobinnachimdi", self.room_id, prompt)
                     await self.save_msg(self.room_id, prompt, "samuelobinnachimdi")
                     await self.save_msg(self.room_id, chat_response, 'AI_Assistant')
                     
@@ -321,7 +169,8 @@ class ConversationConsumer(AsyncWebsocketConsumer):
             sender = text_data_json['sender']
 
             # Classify intent
-            intent = classify_intent(message)
+            from asgiref.sync import sync_to_async
+            intent = await sync_to_async(classify_intent)("samuelobinnachimdi", self.room_id, message)
 
             if intent == 'task':
                 # Display the json
@@ -360,7 +209,8 @@ class ConversationConsumer(AsyncWebsocketConsumer):
                 # Display the json
                 logger.info(f"Intent: {intent}")
 
-                chat_response = generate_chat_response(message)
+                from asgiref.sync import sync_to_async
+                chat_response = await sync_to_async(generate_chat_response)("samuelobinnachimdi", self.room_id, message)
 
                 # send to client
                 await self.send(text_data=json.dumps({"message": chat_response, "message_type": "text_message", "sender": "AI_Assistant"}))

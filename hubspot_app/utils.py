@@ -429,9 +429,42 @@ def get_contact(access_token, contact_id):
     except Exception as e:
         return f"Error getting contact: {str(e)}"
 
+def get_contact_by_email(access_token, email):
+    try:
+        url = f"{settings.HUBSPOT_BASE_URL}/crm/v3/objects/contacts/search"
+        headers = {"Authorization": f"Bearer {access_token}"}
+        data = {
+            "filterGroups": [
+                {
+                    "filters": [
+                        {
+                            "propertyName": "email",
+                            "operator": "EQ",
+                            "value": email
+                        }
+                    ]
+                }
+            ],
+            "sorts": [
+                {
+                    "propertyName": "createdate",
+                    "direction": "DESC"
+                }
+            ]
+        }
+        response = requests.post(url, json=data, headers=headers)
+        return response.json().get('results')[0]
+    except Exception as e:
+        return f"Error getting contact by email: {str(e)}"
 
 def get_all_contacts(access_token):
-    pass
+    try:
+        url = f"{settings.HUBSPOT_BASE_URL}/crm/v3/objects/contacts"
+        headers = {"Authorization": f"Bearer {access_token}"}
+        response = requests.get(url, headers=headers)
+        return response.json()
+    except Exception as e:
+        return f"Error getting all contacts: {str(e)}"
 
 #====== COMPANIES ======
 def create_company(access_token, name, domain, industry):
@@ -482,16 +515,22 @@ def get_company(access_token, company_id):
         return f"Error getting company: {str(e)}"
     
 def get_all_companies(access_token):
-    pass
+    try:
+        url = f"{settings.HUBSPOT_BASE_URL}/crm/v3/objects/companies"
+        headers = {"Authorization": f"Bearer {access_token}"}
+        response = requests.get(url, headers=headers)
+        return response.json()
+    except Exception as e:
+        return f"Error getting all companies: {str(e)}"
 
 #====== DEALS ========
-def create_deal(access_token, dealname, amount, pipeline, stage):
+def create_deal(access_token, deal_name, amount, pipeline, stage):
     try:
         url = f"{settings.HUBSPOT_BASE_URL}/crm/v3/objects/deals"
         headers = {"Authorization": f"Bearer {access_token}", "Content-Type": "application/json"}
         data = {
             "properties": {
-                "dealname": dealname,
+                "dealname": deal_name,
                 "amount": amount,
                 "pipeline": pipeline,
                 "dealstage": stage
@@ -535,17 +574,24 @@ def get_deal(access_token, deal_id):
 
 
 def get_all_deals(access_token):
-    pass
+    try:
+        url = f"{settings.HUBSPOT_BASE_URL}/crm/v3/objects/deals"
+        headers = {"Authorization": f"Bearer {access_token}"}
+        response = requests.get(url, headers=headers)
+        return response.json()    
+    except Exception as e:
+        return f"Error getting all deals: {str(e)}"
 
 #====== PRODUCTS ======
-def create_product(access_token, name, price):
+def create_product(access_token, name, price, description):
     try:
         url = f"{settings.HUBSPOT_BASE_URL}/crm/v3/objects/products"
         headers = {"Authorization": f"Bearer {access_token}", "Content-Type": "application/json"}
         data = {
             "properties": {
                 "name": name,
-                "price": price
+                "price": price,
+                "description": description,
             }
         }
         response = requests.post(url, json=data, headers=headers)
@@ -586,7 +632,13 @@ def get_product(access_token, product_id):
     
 
 def get_all_products(access_token):
-    pass
+    try:
+        url = f"{settings.HUBSPOT_BASE_URL}/crm/v3/objects/products"
+        headers = {"Authorization": f"Bearer {access_token}"}
+        response = requests.get(url, headers=headers)
+        return response.json()
+    except Exception as e:
+        return f"Error getting all products: {str(e)}"
     
 #====== TICKETS ======
 def create_ticket(access_token, subject, content, pipeline, status):
@@ -641,4 +693,10 @@ def get_ticket(access_token, ticket_id):
     
 
 def get_all_tickets(access_token):
-    pass
+    try:
+        url = f"{settings.HUBSPOT_BASE_URL}/crm/v3/objects/tickets"
+        headers = {"Authorization": f"Bearer {access_token}"}
+        response = requests.get(url, headers=headers)
+        return response.json()
+    except Exception as e:
+        return f"Error getting all tickets: {str(e)}"

@@ -6,15 +6,22 @@ import json
 from django.utils import timezone
 from ai_agent.models import Task
 
-class SocialMedia(models.Model):
+class IntegrationPlatform(models.Model):
+    """
+    Model to represent different integration platforms, including CRM and social media.
+    """
     name = models.CharField(max_length=200)
     created_at = models.DateTimeField(auto_now_add=True)
     last_updated = models.DateTimeField(auto_now=True)
     
 
-class SocialMediaAccount(models.Model):
-    platform = models.ForeignKey(SocialMedia, on_delete=models.CASCADE)
+class IntegrationAccount(models.Model):
+    """
+    Model to store access tokens for user accounts on different integration platforms.
+    """
+    platform = models.ForeignKey(IntegrationPlatform, on_delete=models.CASCADE)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
+    access_token = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
     last_updated = models.DateTimeField(auto_now=True)
 
@@ -34,7 +41,7 @@ class PostDraft(models.Model):
     title = models.CharField(max_length=200)
     content = models.TextField()
     media_urls = models.JSONField(blank=True, null=True)  # List of media URLs to attach
-    platforms = models.ManyToManyField(SocialMediaAccount)  # Which platforms to post to
+    platforms = models.ManyToManyField(IntegrationAccount)  # Which platforms to post to
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='draft')
     created_at = models.DateTimeField(auto_now_add=True)
     last_updated = models.DateTimeField(auto_now=True)
@@ -53,7 +60,7 @@ class ScheduledPost(models.Model):
     )
    
     post_draft = models.ForeignKey(PostDraft, on_delete=models.CASCADE, related_name='scheduled_posts')
-    platform_account = models.ForeignKey(SocialMediaAccount, on_delete=models.CASCADE, related_name='scheduled_posts')
+    platform_account = models.ForeignKey(IntegrationAccount, on_delete=models.CASCADE, related_name='scheduled_posts')
     scheduled_time = models.DateTimeField()
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='scheduled')
     published_at = models.DateTimeField(blank=True, null=True)

@@ -16,8 +16,8 @@ hf_client = InferenceClient(
     api_key = "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"
 )
 mistral_client = Mistral(api_key="E2gydwflNPPGY9V1ksxFrEOFeLusQ8bb")
-openai_client = OpenAI("")
-anthropic_client = Anthropic("")
+openai_client = OpenAI(api_key="")
+anthropic_client = Anthropic(api_key="")
 
 from django.db.models import Q
 from ai_agent.models import Chat, ChatRoom
@@ -33,7 +33,7 @@ def get_chat_history_for_room(room_id, user):
     Returns:
         list: A list of dictionaries in the format [{"role": "user", "content": "prompt"}, {"role": "assistant", "content": "response"}, ...]
     """
-    try:
+    try:CLIENT_ID
         # Fetch the ChatRoom by its room_id
         chatroom = ChatRoom.objects.get(room_id=room_id)
     except ChatRoom.DoesNotExist:

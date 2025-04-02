@@ -323,7 +323,7 @@ def conversation_assist(user_prompt):
     """accepts user input commands and respond that the task will be carried out"""
     return f"I'm on your request '{user_prompt}'"
 
-def convert_prompt_to_json(user_prompt):
+def convert_prompt_to_json(username, room_id, user_prompt):
     """instructs the generate_ai_response to convert prompts to json"""
     instructions = (
         "You are an advanced AI Agent for handling HubSpot-related tasks including the basic CRM Management for contacts, companies, deals, tickets, products"
@@ -546,16 +546,30 @@ def convert_prompt_to_json(user_prompt):
 
     prompt = user_prompt
     full_prompt = f"Instruction: {instructions}\n\nUser prompt: {user_prompt}"
-    messages = [
-        # {
-        #     "role": "system",
-        #     "content": instructions,
-        # },
-        {
-            "role": "user",
-            "content": full_prompt,
-        }
-    ]
+
+    # messages = [
+    #     # {
+    #     #     "role": "system",
+    #     #     "content": instructions,
+    #     # },
+    #     {
+    #         "role": "user",
+    #         "content": full_prompt,
+    #     }
+    # ]
+
+    # Assuming you have the user object and room_id
+    user = User.objects.get(username=username)
+    room_id = room_id
+
+    # Get the chat history
+    history = get_chat_history_for_room(room_id, user)
+
+    history.append({"role": "user", "content": full_prompt})
+
+    # Pass the history to the AI model
+    messages = history
+
     response = generate_ai_response(messages)
     return response
 

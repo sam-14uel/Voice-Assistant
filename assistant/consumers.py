@@ -121,7 +121,8 @@ class ConversationConsumer(AsyncWebsocketConsumer):
 
 
                     # Step 2: Convert prompt to JSON
-                    json_response = convert_prompt_to_json(prompt)
+                    from asgiref.sync import sync_to_async
+                    json_response = await sync_to_async(convert_prompt_to_json)("samuelobinnachimdi", self.room_id, prompt)
 
 
                     # Display the json
@@ -183,7 +184,8 @@ class ConversationConsumer(AsyncWebsocketConsumer):
                 await self.send(text_data=json.dumps({"message": assist_response, "message_type": "text_message", "sender": "AI_Assistant"}))
 
                 # Step 2: Convert prompt to JSON
-                json_response = convert_prompt_to_json(message)
+                from asgiref.sync import sync_to_async
+                json_response = await sync_to_async(convert_prompt_to_json)("samuelobinnachimdi", self.room_id, message)
 
                 # Display the json
                 logger.info(f"JSON Response: {json_response}")

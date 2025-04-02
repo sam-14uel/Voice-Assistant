@@ -33,7 +33,7 @@ def get_chat_history_for_room(room_id, user):
     Returns:
         list: A list of dictionaries in the format [{"role": "user", "content": "prompt"}, {"role": "assistant", "content": "response"}, ...]
     """
-    try:CLIENT_ID
+    try:
         # Fetch the ChatRoom by its room_id
         chatroom = ChatRoom.objects.get(room_id=room_id)
     except ChatRoom.DoesNotExist:

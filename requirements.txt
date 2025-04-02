@@ -9,3 +9,9 @@ redis
 tweepy
 celery
 djangorestframework
+channels_redis
+stripe
+hubspot-api-client
+huggingface_hub
+gTTS
+vosk

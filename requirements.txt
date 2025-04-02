@@ -1,0 +1,9 @@
+django
+dj-stripe
+openai
+anthropic
+mistralai
+daphne
+channels
+redis
+tweepy

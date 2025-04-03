@@ -36,7 +36,7 @@ SECRET_KEY = 'django-insecure-_!_k=c)legik=ii&3jbhtqps59_z0%+7!8f@%4wy(_g$gv(@k0
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['vescop.onrender.com', '.vescop.com', '.vescop.ai', '.vescop.onrender.com']
 
 
 # Application definition

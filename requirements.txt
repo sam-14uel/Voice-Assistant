@@ -19,3 +19,4 @@ shortuuid
 facebook-sdk
 facebook-business
 beautifulsoup4
+selenium

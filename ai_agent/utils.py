@@ -864,7 +864,7 @@ def dispatch_function(username: str, room_id: str, platform: str, function_name:
         #======== COMPANIES =========
         "create_company": create_company,
         "update_company": update_company,
-        "get_all_companys": get_all_companies,
+        "get_all_companies": get_all_companies,
         "delete_company": delete_company,
         "get_company": get_company,
 

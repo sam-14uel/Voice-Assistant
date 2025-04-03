@@ -6,7 +6,7 @@ from bs4 import BeautifulSoup
 from selenium.webdriver import Remote, ChromeOptions
 from selenium.webdriver.chromium.remote_connection import ChromiumRemoteConnection
 from bs4 import BeautifulSoup
-from dotenv import load_dotenv
+# from dotenv import load_dotenv
 import os
 
 import selenium.webdriver as webdriver

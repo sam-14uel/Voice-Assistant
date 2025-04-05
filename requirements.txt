@@ -20,3 +20,5 @@ facebook-sdk
 facebook-business
 beautifulsoup4
 selenium
+django-celery-beat
+social-auth-app-django

@@ -1,6 +1,10 @@
 from django.contrib import admin
 from ai_agent.models import Task, TaskWorkflow, Chat, ChatRoom
-from social_media_app.models import IntegrationPlatform, IntegrationAccount, PostDraft, ScheduledPost
+from social_media_app.models import (
+    IntegrationPlatform, IntegrationAccount, Post, ScheduledPost,
+    Company, BrandIdentity, TargetAudience, ContentStrategy
+
+)
 
 # Register your models here.
 
@@ -38,7 +42,7 @@ class IntegrationAccountAdmin(admin.ModelAdmin):
     search_fields = ('platform', 'user')
     #ordering = ('-created_at')
 
-class PostDraftAdmin(admin.ModelAdmin):
+class PostAdmin(admin.ModelAdmin):
     list_display = ('title', 'status', 'created_at')
     list_filter = ('status', 'created_at')
     search_fields = ('title', 'content')
@@ -51,11 +55,40 @@ class ScheduledPostAdmin(admin.ModelAdmin):
     #ordering = ('-scheduled_time')
 
 
+class CompanyAdmin(admin.ModelAdmin):
+    list_display = ('name', 'user', 'industry', 'founded_year')
+    search_fields = ('name', 'industry')
+    list_filter = ('industry', 'founded_year')
+
+    ordering = ('name',)
+    fieldsets = (
+        (None, {
+            'fields': ('name', 'user', 'description', 'mission_statement', 'industry', 'website', 'founded_year', 'company_size', 'logo')
+        }),
+    )
+
+class BrandIdentityAdmin(admin.ModelAdmin):
+    list_display = ('company', 'brand_voice', 'color_palette')
+    search_fields = ('company__name', 'brand_voice')
+    list_filter = ('brand_voice',)
+
+    ordering = ('company',)
+    fieldsets = (
+        (None, {
+            'fields': ('company', 'brand_voice', 'brand_voice_details', 'brand_values', 'color_palette', 'typography', 'visual_style')
+        }),
+    )
+
+
 admin.site.register(IntegrationPlatform, IntegrationPlatformAdmin)
 admin.site.register(IntegrationAccount, IntegrationAccountAdmin)
-admin.site.register(PostDraft, PostDraftAdmin)
+admin.site.register(Post, PostAdmin)
 admin.site.register(ScheduledPost, ScheduledPostAdmin)
 admin.site.register(Task, TaskAdmin)
 admin.site.register(TaskWorkflow, TaskWorkflowAdmin)
 admin.site.register(Chat, ChatAdmin)
 admin.site.register(ChatRoom, ChatRoomAdmin)
+admin.site.register(Company)
+admin.site.register(BrandIdentity)
+admin.site.register(TargetAudience)
+admin.site.register(ContentStrategy)

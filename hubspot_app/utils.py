@@ -403,7 +403,8 @@ def update_contact(access_token, contact_id, **kwargs):
     try:
         url = f"{settings.HUBSPOT_BASE_URL}/crm/v3/objects/contacts/{contact_id}"
         headers = {"Authorization": f"Bearer {access_token}", "Content-Type": "application/json"}
-        data = {"properties": kwargs}
+        # data = {"properties": kwargs}
+        data = kwargs
         response = requests.patch(url, json=data, headers=headers)
         return response.json()
     except Exception as e:
@@ -488,7 +489,8 @@ def update_company(access_token, company_id, **kwargs):
     try:
         url = f"{settings.HUBSPOT_BASE_URL}/crm/v3/objects/companies/{company_id}"
         headers = {"Authorization": f"Bearer {access_token}", "Content-Type": "application/json"}
-        data = {"properties": kwargs}
+        # data = {"properties": kwargs}
+        data = kwargs
         response = requests.patch(url, json=data, headers=headers)
         return response.json()
     except Exception as e:
@@ -546,7 +548,8 @@ def update_deal(access_token, deal_id, **kwargs):
     try:
         url = f"{settings.HUBSPOT_BASE_URL}/crm/v3/objects/deals/{deal_id}"
         headers = {"Authorization": f"Bearer {access_token}", "Content-Type": "application/json"}
-        data = {"properties": kwargs}
+        # data = {"properties": kwargs}
+        data = kwargs
         response = requests.patch(url, json=data, headers=headers)
         return response.json()
     except Exception as e:
@@ -604,7 +607,8 @@ def update_product(access_token, product_id, **kwargs):
     try:
         url = f"{settings.HUBSPOT_BASE_URL}/crm/v3/objects/products/{product_id}"
         headers = {"Authorization": f"Bearer {access_token}", "Content-Type": "application/json"}
-        data = {"properties": kwargs}
+        # data = {"properties": kwargs}
+        data = kwargs
         response = requests.patch(url, json=data, headers=headers)
         return response.json()
     except Exception as e:
@@ -665,7 +669,8 @@ def update_ticket(access_token, ticket_id, **kwargs):
     try:
         url = f"{settings.HUBSPOT_BASE_URL}/crm/v3/objects/tickets/{ticket_id}"
         headers = {"Authorization": f"Bearer {access_token}", "Content-Type": "application/json"}
-        data = {"properties": kwargs}
+        # data = {"properties": kwargs}
+        data = kwargs
         response = requests.patch(url, json=data, headers=headers)
         return response.json()
     except Exception as e:

@@ -107,7 +107,7 @@ def generate_ai_response(prompt):
         response = ""
         for chunk in stream_response:
             if chunk.data.choices and chunk.data.choices[0].delta and chunk.data.choices[0].delta.content:
-                response += chunk.data.choices[0].delta.content
+                response += chunk.data.choices[0].delta.content # type: ignore
 
         return response
     except Exception as e:
@@ -131,7 +131,11 @@ def generate_image(prompt):
         return f"AI error: {str(e)}"
 
 #==============================================================
-from social_media_app.models import Company, SocialMediaProfile, BrandIdentity, TargetAudience, ContentStrategy, Product, Competitor, UniqueSellingProposition, ContentAsset, PostTemplate
+from social_media_app.models import (
+    Company, BrandIdentity,
+    TargetAudience, ContentStrategy, Product, 
+    Competitor, UniqueSellingProposition
+)
 
 def generate_facebook_post(username, room_id, prompt):
     """
@@ -143,13 +147,6 @@ def generate_facebook_post(username, room_id, prompt):
     brand_identity = BrandIdentity.objects.get(company=company_obj)
     target_audience = TargetAudience.objects.get(company=company_obj)
     content_strategy = ContentStrategy.objects.get(company=company_obj)
-    
-    # Get social media profile if exists
-    try:
-        fb_profile = SocialMediaProfile.objects.get(company=company_obj, platform='facebook')
-        posting_guidelines = fb_profile.platform_specific_guidelines
-    except SocialMediaProfile.DoesNotExist:
-        posting_guidelines = "Standard Facebook best practices"
 
     instructions = (
         f"""
@@ -203,7 +200,7 @@ def generate_facebook_post(username, room_id, prompt):
     messages = history
 
     response = generate_ai_response(messages)
-    return response
+    return {"facebook_post": response}
 
 def generate_linkedin_post(username, room_id, prompt):
     """
@@ -215,14 +212,6 @@ def generate_linkedin_post(username, room_id, prompt):
     brand_identity = BrandIdentity.objects.get(company=company_obj)
     target_audience = TargetAudience.objects.get(company=company_obj)
     content_strategy = ContentStrategy.objects.get(company=company_obj)
-    
-    # Get social media profile if exists
-    try:
-        li_profile = SocialMediaProfile.objects.get(company=company_obj, platform='linkedin')
-        posting_guidelines = li_profile.platform_specific_guidelines
-    except SocialMediaProfile.DoesNotExist:
-        posting_guidelines = "Standard LinkedIn best practices"
-
 
     instructions = (
         f"""
@@ -277,7 +266,7 @@ def generate_linkedin_post(username, room_id, prompt):
 
 
     response = generate_ai_response(messages)
-    return response
+    return {"linkedin_post": response}
 
 def generate_instagram_post(username, room_id, prompt):
     """
@@ -289,13 +278,6 @@ def generate_instagram_post(username, room_id, prompt):
     brand_identity = BrandIdentity.objects.get(company=company_obj)
     target_audience = TargetAudience.objects.get(company=company_obj)
     content_strategy = ContentStrategy.objects.get(company=company_obj)
-
-    # Get social media profile if exists
-    try:
-        ig_profile = SocialMediaProfile.objects.get(company=company_obj, platform='instagram')
-        posting_guidelines = ig_profile.platform_specific_guidelines
-    except SocialMediaProfile.DoesNotExist:
-        posting_guidelines = "Standard Instagram best practices"
 
 
     instructions = (
@@ -351,7 +333,7 @@ def generate_instagram_post(username, room_id, prompt):
     messages = history
 
     response = generate_ai_response(messages)
-    return response
+    return {"instagram_post": response}
 
 def generate_twitter_post(username, room_id, prompt):
     """
@@ -363,14 +345,6 @@ def generate_twitter_post(username, room_id, prompt):
     brand_identity = BrandIdentity.objects.get(company=company_obj)
     target_audience = TargetAudience.objects.get(company=company_obj)
     content_strategy = ContentStrategy.objects.get(company=company_obj)
-
-    # Get social media profile if exists
-    try:
-        ig_profile = SocialMediaProfile.objects.get(company=company_obj, platform='instagram')
-        posting_guidelines = ig_profile.platform_specific_guidelines
-    except SocialMediaProfile.DoesNotExist:
-        posting_guidelines = "Standard Instagram best practices"
-
 
     instructions = (
         f"""
@@ -425,7 +399,8 @@ def generate_twitter_post(username, room_id, prompt):
     messages = history
 
     response = generate_ai_response(messages)
-    return response
+
+    return {"twitter_post": response}
 
 
 #
@@ -547,9 +522,12 @@ def convert_prompt_to_json(username, room_id, user_prompt):
 
         1. **create_contact**
         - Parameters:
-            - email (string)
-            - first_name (string)
-            - last_name (string)
+            - email (string)(required)
+            - first_name (string)(required)
+            - last_name (string)(required)
+            - phone
+            - company
+            - lifecyclestage
 
         2. **get_contact_by_email**
         - Parameters:
@@ -566,7 +544,7 @@ def convert_prompt_to_json(username, room_id, user_prompt):
         5. **update_contact**
         - Parameters:
             - contact_id (string)
-            - updated_properties (object/dictionary)
+            - properties (object/dictionary)
 
         6. **delete_contact**
         - Parameters:
@@ -574,10 +552,10 @@ def convert_prompt_to_json(username, room_id, user_prompt):
 
         7. **create_deal**
         - Parameters:
-            - deal_name (string)
-            - pipeline (string)
+            - deal_name (string)(required)
+            - pipeline (string)(required)
             - stage (string)
-            - amount (number)
+            - amount (number)(required)
 
         8. **get_all_deals**
         - Parameters:
@@ -585,7 +563,7 @@ def convert_prompt_to_json(username, room_id, user_prompt):
         9. **update_deal**
         - Parameters:
             - deal_id (string)
-            - updated_properties (object/dictionary)
+            - properties (object/dictionary)
 
         10. **delete_deal**
         - Parameters:
@@ -596,71 +574,78 @@ def convert_prompt_to_json(username, room_id, user_prompt):
             - deal_id (string)
 
         12. **create_company**
-            - Parameters:
-            - company_name (string)
-            - domain (string)
+        - Parameters:
+            - name (string)(required)
+            - domain (string)(required)
+            - phone
+            - industry(required)
+            - lifecyclestage
 
         13. **get_all_companies**
-            - Parameters:
-                - None
+        - Parameters:
+            - None
 
         14. **get_company**
-            - Parameters:
-                - company_id (string)
+        - Parameters:
+            - company_id (string)
         
         15. **update_company**
-            - Parameters:
-                - company_id (string)
-                - updated_properties (object/dictionary)
+        - Parameters:
+            - company_id (string)
+            - properties (object/dictionary)(required)
 
         16. **delete_company**
-            - Parameters:
-                - company_id (string)
+        - Parameters:
+            - company_id (string)
 
         17. **create_product**
-            - Parameters:
-                - name (string)
-                - price (number)
-                - description (string)
+        - Parameters:
+            - name (string)
+            - price (number)
+            - description (string)
 
         18. **get_all_products**
-            - Parameters:
-                - None
+        - Parameters:
+            - None
 
         19. **update_product**
-            - Parameters:
-                - product_id (string)
-                - updated_properties (object/dictionary)
+        - Parameters:
+            - product_id (string)
+            - properties (object/dictionary)
 
         20. **delete_product**
-            - Parameters:
-                - product_id (string)
+        - Parameters:
+            - product_id (string)
 
         21. **get_product**
-            - Parameters:
-                - product_id (string)
+        - Parameters:
+            - product_id (string)
 
         22. **create_ticket**
-            - Parameters:
-                - subject (string)
-                - status (string)
+        - Parameters:
+            - subject (string)(required)
+            - content (string)(required)
+            - hs_pipeline(required)
+            - hs_pipeline_stage
+            - pipeline
+            - status
 
         23. **get_all_tickets**
-            - Parameters:
-                - None
+        - Parameters:
+            - None
 
         24. **update_ticket**
-            - Parameters:
-                - ticket_id (string)
-                - updated_properties (object/dictionary)
+        - Parameters:
+            - ticket_id (string)
+            - properties (object/dictionary)
 
         25. **delete_ticket**
-            - Parameters:
-                - ticket_id (string)
+        - Parameters:
+            - ticket_id (string)
 
         26. **get_ticket**
-            - Parameters:
-                - ticket_id (string)
+        - Parameters:
+            - ticket_id (string)
         """
         """
         Instructions for JSON Response Formatting:
@@ -732,7 +717,7 @@ def convert_prompt_to_json(username, room_id, user_prompt):
                     "function": "update_contact",
                     "parameters": {{
                         "contact_id": "{contact_id}",
-                        "updated_properties": {{
+                        "properties": {{
                             "email": "Johnmike@email.com"
                         }}
                     }},
@@ -803,7 +788,7 @@ from hubspot_app.utils import create_company, update_company, get_company, get_a
 from hubspot_app.utils import create_ticket, update_ticket, get_ticket, get_all_tickets, delete_ticket
 #=========================================
 #================== SOCIAL NETWORK ===================
-from social_media_app.utils import SocialMediaClient
+from social_media_app.utils import post_on_facebook, post_on_instagram, post_on_twitter, post_on_linkedin
 
 
 def validate_json_response(response_text: str):
@@ -886,12 +871,16 @@ def dispatch_function(username: str, room_id: str, platform: str, function_name:
     social_media_function_mapping = {
         #=========== TWITTER ===========
         "generate_twitter_post": generate_twitter_post,
+        "post_on_twitter": post_on_twitter,
         #========== INSTAGRAM ==========
         "generate_instagram_post": generate_instagram_post,
+        "post_on_instagram": post_on_instagram,
         #=========== FACEBOOK ==========
         "generate_facebook_post": generate_facebook_post,
+        "post_on_facebook": post_on_facebook,
         #=========== LINKEDIN ==========
         "generate_linkedin_post": generate_linkedin_post,
+        "post_on_linkedin": post_on_linkedin,
     }
 
     if platform == "hubspot":
@@ -1074,9 +1063,12 @@ def classify_intent(username, room_id, message):
 
         1. **create_contact**
         - Parameters:
-            - email (string)
-            - first_name (string)
-            - last_name (string)
+            - email (string)(required)
+            - first_name (string)(required)
+            - last_name (string)(required)
+            - phone
+            - company
+            - lifecyclestage
 
         2. **get_contact_by_email**
         - Parameters:
@@ -1093,7 +1085,7 @@ def classify_intent(username, room_id, message):
         5. **update_contact**
         - Parameters:
             - contact_id (string)
-            - updated_properties (object/dictionary)
+            - properties (object/dictionary)
 
         6. **delete_contact**
         - Parameters:
@@ -1101,10 +1093,10 @@ def classify_intent(username, room_id, message):
 
         7. **create_deal**
         - Parameters:
-            - deal_name (string)
-            - pipeline (string)
+            - deal_name (string)(required)
+            - pipeline (string)(required)
             - stage (string)
-            - amount (number)
+            - amount (number)(required)
 
         8. **get_all_deals**
         - Parameters:
@@ -1112,7 +1104,7 @@ def classify_intent(username, room_id, message):
         9. **update_deal**
         - Parameters:
             - deal_id (string)
-            - updated_properties (object/dictionary)
+            - properties (object/dictionary)
 
         10. **delete_deal**
         - Parameters:
@@ -1123,73 +1115,81 @@ def classify_intent(username, room_id, message):
             - deal_id (string)
 
         12. **create_company**
-            - Parameters:
-            - company_name (string)
-            - domain (string)
+        - Parameters:
+            - name (string)(required)
+            - domain (string)(required)
+            - phone
+            - industry(required)
+            - lifecyclestage
 
         13. **get_all_companies**
-            - Parameters:
-                - None
+        - Parameters:
+            - None
 
         14. **get_company**
-            - Parameters:
-                - company_id (string)
+        - Parameters:
+            - company_id (string)
         
         15. **update_company**
-            - Parameters:
-                - company_id (string)
-                - updated_properties (object/dictionary)
+        - Parameters:
+            - company_id (string)
+            - properties (object/dictionary)(required)
 
         16. **delete_company**
-            - Parameters:
-                - company_id (string)
+        - Parameters:
+            - company_id (string)
 
         17. **create_product**
-            - Parameters:
-                - name (string)
-                - price (number)
-                - description (string)
+        - Parameters:
+            - name (string)
+            - price (number)
+            - description (string)
 
         18. **get_all_products**
-            - Parameters:
-                - None
+        - Parameters:
+            - None
 
         19. **update_product**
-            - Parameters:
-                - product_id (string)
-                - updated_properties (object/dictionary)
+        - Parameters:
+            - product_id (string)
+            - properties (object/dictionary)
 
         20. **delete_product**
-            - Parameters:
-                - product_id (string)
+        - Parameters:
+            - product_id (string)
 
         21. **get_product**
-            - Parameters:
-                - product_id (string)
+        - Parameters:
+            - product_id (string)
 
         22. **create_ticket**
-            - Parameters:
-                - subject (string)
-                - status (string)
+        - Parameters:
+            - subject (string)(required)
+            - content (string)(required)
+            - hs_pipeline(required)
+            - hs_pipeline_stage
+            - pipeline
+            - status
 
         23. **get_all_tickets**
-            - Parameters:
-                - None
+        - Parameters:
+            - None
 
         24. **update_ticket**
-            - Parameters:
-                - ticket_id (string)
-                - updated_properties (object/dictionary)
+        - Parameters:
+            - ticket_id (string)
+            - properties (object/dictionary)
 
         25. **delete_ticket**
-            - Parameters:
-                - ticket_id (string)
+        - Parameters:
+            - ticket_id (string)
 
         26. **get_ticket**
-            - Parameters:
-                - ticket_id (string)
+        - Parameters:
+            - ticket_id (string)
         """
         "Classify the intent of this message: '{message}'\nRespond with only one word: 'task' if it's a request for a specific task, function, or tool call, or 'chat' if it's a regular conversation."
+        "You are to respond with only one word 'chat' if the user requested for a task but didn't provide all the required fields to perform tasks"
     )
     message_format = instruction.format(message=message)
 
@@ -1235,9 +1235,12 @@ def generate_chat_response(username, room_id, message):
 
         1. **create_contact**
         - Parameters:
-            - email (string)
-            - first_name (string)
-            - last_name (string)
+            - email (string)(required)
+            - first_name (string)(required)
+            - last_name (string)(required)
+            - phone
+            - company
+            - lifecyclestage
 
         2. **get_contact_by_email**
         - Parameters:
@@ -1254,7 +1257,7 @@ def generate_chat_response(username, room_id, message):
         5. **update_contact**
         - Parameters:
             - contact_id (string)
-            - updated_properties (object/dictionary)
+            - properties (object/dictionary)
 
         6. **delete_contact**
         - Parameters:
@@ -1262,10 +1265,10 @@ def generate_chat_response(username, room_id, message):
 
         7. **create_deal**
         - Parameters:
-            - deal_name (string)
-            - pipeline (string)
+            - deal_name (string)(required)
+            - pipeline (string)(required)
             - stage (string)
-            - amount (number)
+            - amount (number)(required)
 
         8. **get_all_deals**
         - Parameters:
@@ -1273,7 +1276,7 @@ def generate_chat_response(username, room_id, message):
         9. **update_deal**
         - Parameters:
             - deal_id (string)
-            - updated_properties (object/dictionary)
+            - properties (object/dictionary)
 
         10. **delete_deal**
         - Parameters:
@@ -1284,71 +1287,78 @@ def generate_chat_response(username, room_id, message):
             - deal_id (string)
 
         12. **create_company**
-            - Parameters:
-            - company_name (string)
-            - domain (string)
+        - Parameters:
+            - name (string)(required)
+            - domain (string)(required)
+            - phone
+            - industry(required)
+            - lifecyclestage
 
         13. **get_all_companies**
-            - Parameters:
-                - None
+        - Parameters:
+            - None
 
         14. **get_company**
-            - Parameters:
-                - company_id (string)
+        - Parameters:
+            - company_id (string)
         
         15. **update_company**
-            - Parameters:
-                - company_id (string)
-                - updated_properties (object/dictionary)
+        - Parameters:
+            - company_id (string)
+            - properties (object/dictionary)(required)
 
         16. **delete_company**
-            - Parameters:
-                - company_id (string)
+        - Parameters:
+            - company_id (string)
 
         17. **create_product**
-            - Parameters:
-                - name (string)
-                - price (number)
-                - description (string)
+        - Parameters:
+            - name (string)
+            - price (number)
+            - description (string)
 
         18. **get_all_products**
-            - Parameters:
-                - None
+        - Parameters:
+            - None
 
         19. **update_product**
-            - Parameters:
-                - product_id (string)
-                - updated_properties (object/dictionary)
+        - Parameters:
+            - product_id (string)
+            - properties (object/dictionary)
 
         20. **delete_product**
-            - Parameters:
-                - product_id (string)
+        - Parameters:
+            - product_id (string)
 
         21. **get_product**
-            - Parameters:
-                - product_id (string)
+        - Parameters:
+            - product_id (string)
 
         22. **create_ticket**
-            - Parameters:
-                - subject (string)
-                - status (string)
+        - Parameters:
+            - subject (string)(required)
+            - content (string)(required)
+            - hs_pipeline(required)
+            - hs_pipeline_stage
+            - pipeline
+            - status
 
         23. **get_all_tickets**
-            - Parameters:
-                - None
+        - Parameters:
+            - None
 
         24. **update_ticket**
-            - Parameters:
-                - ticket_id (string)
-                - updated_properties (object/dictionary)
+        - Parameters:
+            - ticket_id (string)
+            - properties (object/dictionary)
 
         25. **delete_ticket**
-            - Parameters:
-                - ticket_id (string)
+        - Parameters:
+            - ticket_id (string)
 
         26. **get_ticket**
-            - Parameters:
-                - ticket_id (string)
+        - Parameters:
+            - ticket_id (string)
         """
     )
     prompt = message

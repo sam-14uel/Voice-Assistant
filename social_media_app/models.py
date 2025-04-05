@@ -13,6 +13,9 @@ class IntegrationPlatform(models.Model):
     name = models.CharField(max_length=200)
     created_at = models.DateTimeField(auto_now_add=True)
     last_updated = models.DateTimeField(auto_now=True)
+    api_endpoint = models.URLField(null=True, blank=True)  # e.g., "https://api.twitter.com/2/tweets"
+    max_length = models.IntegerField(default=280)  # e.g., Twitter: 280, Instagram: 2200
+    platform_id = models.CharField(max_length=128, unique=True, default=shortuuid.uuid)
     
 
 class IntegrationAccount(models.Model):
@@ -22,57 +25,72 @@ class IntegrationAccount(models.Model):
     platform = models.ForeignKey(IntegrationPlatform, on_delete=models.CASCADE)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     access_token = models.TextField()
+    refresh_token = models.TextField(null=True, blank=True)  # For OAuth refresh
+    expires_at = models.DateTimeField(null=True, blank=True)  # Token expiration
     created_at = models.DateTimeField(auto_now_add=True)
     last_updated = models.DateTimeField(auto_now=True)
+    integration_account_id = models.CharField(max_length=128, unique=True, default=shortuuid.uuid)
 
-class PostDraft(models.Model):
-    """Model for content drafts waiting for approval"""
-    STATUS_CHOICES = (
-        ('draft', 'Draft'),
-        ('awaiting_approval', 'Awaiting Approval'),
-        ('approved', 'Approved'),
-        ('rejected', 'Rejected'),
-        ('published', 'Published'),
-        ('failed', 'Failed'),
-    )
-   
+class Post(models.Model):
+    """"""
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='post_drafts')
-    related_task = models.ForeignKey(Task, on_delete=models.SET_NULL, null=True, related_name='post_drafts')
-    title = models.CharField(max_length=200)
     content = models.TextField()
     media_urls = models.JSONField(blank=True, null=True)  # List of media URLs to attach
-    platforms = models.ManyToManyField(IntegrationAccount)  # Which platforms to post to
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='draft')
+    platforms = models.ForeignKey(IntegrationAccount, on_delete=models.CASCADE)  # Which platforms to post to
     created_at = models.DateTimeField(auto_now_add=True)
     last_updated = models.DateTimeField(auto_now=True)
-    user_feedback = models.TextField(blank=True, null=True)  # User feedback for revisions
+    post_id = models.CharField(max_length=128, unique=True, default=shortuuid.uuid)
    
     def __str__(self):
-        return f"{self.title} - {self.status}"
+        return f"Post {self.post_id} by {self.user.username} post on {self.platforms.platform.name}"
+
+
+class Media(models.Model):
+    post = models.ForeignKey(Post, on_delete=models.CASCADE, related_name="media")
+    file = models.FileField(upload_to="media/%Y/%m/%d/")
+    media_type = models.CharField(max_length=50)
+    uploaded_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.media_type} for Post {self.post.post_id}"
 
 class ScheduledPost(models.Model):
     """Model for approved posts scheduled for publishing"""
     STATUS_CHOICES = (
+        ("draft", "Draft"),
         ('scheduled', 'Scheduled'),
         ('published', 'Published'),
         ('failed', 'Failed'),
         ('cancelled', 'Cancelled'),
     )
    
-    post_draft = models.ForeignKey(PostDraft, on_delete=models.CASCADE, related_name='scheduled_posts')
+    post = models.ForeignKey(Post, on_delete=models.CASCADE, related_name='scheduled_posts')
     platform_account = models.ForeignKey(IntegrationAccount, on_delete=models.CASCADE, related_name='scheduled_posts')
-    scheduled_time = models.DateTimeField()
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='scheduled')
-    published_at = models.DateTimeField(blank=True, null=True)
-    post_id = models.CharField(max_length=100, blank=True, null=True)  # ID from the platform after posting
-    engagement_metrics = models.JSONField(blank=True, null=True)  # Metrics after publishing
+    scheduled_time = models.DateTimeField() # When the post should go live
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='draft')
+    published_at = models.DateTimeField(blank=True, null=True)  # Actual publish time
+    platform_post_id = models.CharField(max_length=100, blank=True, null=True)  # ID from the platform after posting
     error_message = models.TextField(blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    schedule_id = models.CharField(max_length=128, unique=True, default=shortuuid.uuid)
    
     class Meta:
         ordering = ['scheduled_time']
        
     def __str__(self):
-        return f"{self.post_draft.title} - {self.platform_account.platform.name} - {self.status}"
+        return f"Scheduled {self.post.post_id} at {self.scheduled_time}"
+
+
+class PostAnalytics(models.Model):
+    scheduled_post = models.ForeignKey(ScheduledPost, on_delete=models.CASCADE)
+    integration_account = models.ForeignKey(IntegrationAccount, on_delete=models.CASCADE)
+    likes = models.IntegerField(default=0)
+    shares = models.IntegerField(default=0)
+    comments = models.IntegerField(default=0)
+    last_fetched = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"Analytics for {self.scheduled_post.post.post_id} on {self.integration_account.platform.name}"
 
 
 #============================================================================================
@@ -81,7 +99,7 @@ from django.contrib.auth.models import User
 
 class Company(models.Model):
     """Company/Brand information model"""
-    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='company')
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='company')
     name = models.CharField(max_length=255)
     description = models.TextField()
     mission_statement = models.TextField(blank=True, null=True)
@@ -90,6 +108,7 @@ class Company(models.Model):
     founded_year = models.PositiveIntegerField(blank=True, null=True)
     company_size = models.CharField(max_length=50, blank=True, null=True)
     logo = models.ImageField(upload_to='company_logos/', blank=True, null=True)
+    company_id = models.CharField(max_length=128, unique=True, default=shortuuid.uuid)
     
     def __str__(self):
         return self.name
@@ -106,7 +125,7 @@ class BrandIdentity(models.Model):
         ('innovative', 'Innovative'),
         ('formal', 'Formal'),
     ]
-    
+    brand_identity_id = models.CharField(max_length=128, unique=True, default=shortuuid.uuid)
     company = models.OneToOneField(Company, on_delete=models.CASCADE, related_name='brand_identity')
     brand_voice = models.CharField(max_length=50, choices=TONE_CHOICES)
     brand_voice_details = models.TextField(help_text="Additional details about your brand voice")
@@ -127,37 +146,11 @@ class TargetAudience(models.Model):
     interests = models.TextField(blank=True, null=True)
     pain_points = models.TextField(blank=True, null=True)
     behavior_patterns = models.TextField(blank=True, null=True)
+    target_audience_id = models.CharField(max_length=128, unique=True, default=shortuuid.uuid)
     
     def __str__(self):
         return f"{self.company.name}'s Target Audience"
 
-class SocialMediaProfile(models.Model):
-    """Social media platform details"""
-    PLATFORM_CHOICES = [
-        ('instagram', 'Instagram'),
-        ('facebook', 'Facebook'),
-        ('twitter', 'Twitter/X'),
-        ('linkedin', 'LinkedIn'),
-        ('tiktok', 'TikTok'),
-        ('youtube', 'YouTube'),
-        ('pinterest', 'Pinterest'),
-        ('snapchat', 'Snapchat'),
-        ('other', 'Other'),
-    ]
-    
-    company = models.ForeignKey(Company, on_delete=models.CASCADE, related_name='social_profiles')
-    platform = models.CharField(max_length=20, choices=PLATFORM_CHOICES)
-    profile_url = models.URLField()
-    username = models.CharField(max_length=100)
-    audience_size = models.PositiveIntegerField(default=0)
-    posting_frequency = models.CharField(max_length=50, blank=True, null=True)
-    platform_specific_guidelines = models.TextField(blank=True, null=True)
-    
-    class Meta:
-        unique_together = ['company', 'platform']
-    
-    def __str__(self):
-        return f"{self.company.name} on {self.platform}"
 
 class ContentStrategy(models.Model):
     """Content strategy and goals"""
@@ -180,6 +173,7 @@ class ContentStrategy(models.Model):
     preferred_post_types = models.TextField(help_text="e.g., Educational, Promotional, UGC, etc.")
     content_to_avoid = models.TextField(blank=True, null=True)
     campaign_info = models.TextField(blank=True, null=True, help_text="Current or upcoming campaigns")
+    content_strategy_id = models.CharField(max_length=128, unique=True, default=shortuuid.uuid)
     
     def __str__(self):
         return f"{self.company.name}'s Content Strategy"
@@ -193,6 +187,7 @@ class Product(models.Model):
     target_audience = models.TextField(blank=True, null=True)
     price_info = models.CharField(max_length=255, blank=True, null=True)
     product_image = models.ImageField(upload_to='product_images/', blank=True, null=True)
+    product_id = models.CharField(max_length=128, unique=True, default=shortuuid.uuid)
     
     def __str__(self):
         return f"{self.name} - {self.company.name}"
@@ -205,6 +200,7 @@ class Competitor(models.Model):
     strengths = models.TextField(blank=True, null=True)
     weaknesses = models.TextField(blank=True, null=True)
     social_media_links = models.TextField(blank=True, null=True)
+    competitor_id = models.CharField(max_length=128, unique=True, default=shortuuid.uuid)
     
     def __str__(self):
         return f"{self.name} - competitor of {self.company.name}"
@@ -215,43 +211,10 @@ class UniqueSellingProposition(models.Model):
     main_usp = models.TextField(help_text="What makes your company/product unique?")
     differentiators = models.TextField(help_text="Key differentiators from competitors")
     value_proposition = models.TextField(help_text="Value you provide to customers")
+    unique_selling_proposition_id = models.CharField(max_length=128, unique=True, default=shortuuid.uuid)
     
     def __str__(self):
         return f"{self.company.name}'s USP"
 
-class ContentAsset(models.Model):
-    """Content assets for social media posts"""
-    ASSET_TYPE_CHOICES = [
-        ('image', 'Image'),
-        ('video', 'Video'),
-        ('document', 'Document'),
-        ('testimonial', 'Testimonial'),
-        ('case_study', 'Case Study'),
-        ('other', 'Other'),
-    ]
-    
-    company = models.ForeignKey(Company, on_delete=models.CASCADE, related_name='content_assets')
-    asset_type = models.CharField(max_length=20, choices=ASSET_TYPE_CHOICES)
-    title = models.CharField(max_length=255)
-    description = models.TextField(blank=True, null=True)
-    file = models.FileField(upload_to='content_assets/', blank=True, null=True)
-    url = models.URLField(blank=True, null=True)
-    text_content = models.TextField(blank=True, null=True)
-    
-    def __str__(self):
-        return f"{self.title} - {self.company.name}"
-
-class PostTemplate(models.Model):
-    """Template for generated posts"""
-    company = models.ForeignKey(Company, on_delete=models.CASCADE, related_name='post_templates')
-    name = models.CharField(max_length=255)
-    platform = models.CharField(max_length=50)
-    template_text = models.TextField()
-    post_type = models.CharField(max_length=50)
-    character_limit = models.PositiveIntegerField(default=0)
-    image_specs = models.CharField(max_length=255, blank=True, null=True)
-    hashtag_strategy = models.TextField(blank=True, null=True)
-    
-    def __str__(self):
-        return f"{self.name} - {self.company.name}"
 #============================================================================================
+
